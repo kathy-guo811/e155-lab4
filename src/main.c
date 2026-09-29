@@ -320,9 +320,7 @@ void play_note(uint32_t frequency, uint32_t duration) {
     TIM16->CCER &= ~(1 << CC1E);
 
     if (frequency == 0) {
-        // rest: use a silent 1 kHz timer
-        // one timer period = 1 ms
-        period = 1000;
+        period = 1000; // cycle formula to cancel out facter of 1000
         cycles = duration;
     }
     else {
@@ -331,7 +329,7 @@ void play_note(uint32_t frequency, uint32_t duration) {
         period = 1000000 / frequency;
 
         // calculate the number of completed periods needed for the requested duration
-        cycles = (duration * 1000 + period / 2) / period;
+        cycles = (duration * 1000) / period;
     }
 
     // configure the PWM period
@@ -346,7 +344,7 @@ void play_note(uint32_t frequency, uint32_t duration) {
     // clear the update flag caused by UG
     TIM16->SR &= ~(1 << UIF);
 
-    // enable the speaker output for actual notes
+    // enable TIM16 PWM output
     if (frequency != 0) {
         TIM16->CCER |= (1 << CC1E);
     }
@@ -393,14 +391,14 @@ int main(void) {
   // select MSI as the system clock
   RCC->CFGR &= ~(3 << SW);
 
-  // Wait until MSI is selected
+  // wait until MSI is selected
   while ((RCC->CFGR & (3 << SWS)) != 0) {
   }
 
-  // Set AHB, APB1 and APB2 prescalers to 1
+  // set AHB, APB1 and APB2 prescalers to 1
   RCC->CFGR &= ~((15 << HPRE) | (7 << PPRE2));
 
-  // set PA6 to alternate-function mode (10)
+  // set PA6 to alternate-function mode 
   GPIOA->MODER &= ~(3 << MODE6);
   GPIOA->MODER |= (2 << MODE6);
 
@@ -414,7 +412,7 @@ int main(void) {
   // select PWM mode 1 and enable preloading
   TIM16->CCMR1 = (6 << OC1M) | (1 << OC1PE);
 
-  // clear all TIM16 bit
+  // clear all TIM16_CCER registers
   TIM16->CCER = 0;
 
   // enables TIM16 main output gate
@@ -428,7 +426,7 @@ int main(void) {
       play_note(frequency, duration);
     }
 
-  // Song finished: remain silent
-    return (0);
+  // song finished: remain silent
+    return 0;
   }
 }
