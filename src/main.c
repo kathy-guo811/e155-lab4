@@ -1,4 +1,3 @@
-
 // main.c
 // Kathy Guo
 // kaguo@g.hmc.edu
